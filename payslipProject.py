@@ -27,47 +27,72 @@ class ShiftManagementApp:
 
 app = ShiftManagementApp()
 
-# Create some shifts
-app.create_shift(
-  datetime.datetime(2022, 12, 9, 9),
-  datetime.datetime(2022, 12, 9, 17),
-  "John Doe"
-)
-app.create_shift(
-  datetime.datetime(2022, 12, 10, 13),
-  datetime.datetime(2022, 12, 10, 21),
-  "John Doe"
-)
-app.create_shift(
-  datetime.datetime(2022, 12, 9, 9),
-  datetime.datetime(2022, 12, 9, 17),
-  "Jane Doe"
-)
+#reading a colored cell in excel
+
+# Load the Excel workbook
+workbook = load_workbook("./November.xlsx")
+
+# Get the active sheet
+sheet = workbook.active
+
+worker_name = "אדם".encode('utf-8')
+morning_str = "בוקר".encode('utf-8')
+evening_str = "ערב".encode('utf-8')
+night_str = "לילה".encode('utf-8')
+friday_str = "שישי".encode('utf-8')
+
+for row in sheet.iter_rows():
+  for cell in row:
+    if cell.value == worker_name.decode('utf-8'):
+      workers_row = row
+
+# Scan the cells in the sheet
+for row in sheet.iter_rows():
+  if row == workers_row:
+    for cell in row:
+      if len(cell.coordinate) == 3:
+        date =  ord(cell.coordinate[0]) - 65
+      if len(cell.coordinate) == 4:
+        date = ord("z") + ord(cell.coordinate[1]) - 25 
+
+      if cell.value == morning_str.decode('utf-8'):
+        
+        print(f"Cell {cell.coordinate} is a morning shift")
+        app.create_shift(
+        datetime.datetime(2022, 11, date, 7),
+        datetime.datetime(2022, 11, date, 16),
+        worker_name
+        )
+
+      if cell.value == evening_str.decode('utf-8'):
+        print(f"Cell {cell.coordinate} is a evening shift")
+        app.create_shift(
+        datetime.datetime(2022, 11, date, 16),
+        datetime.datetime(2022, 11, date, 23),
+        worker_name
+        )
+    
+      if cell.value == night_str.decode('utf-8'):
+        print(f"Cell {cell.coordinate} is a night shift")
+        app.create_shift(
+        datetime.datetime(2022, 11, date, 23),
+        datetime.datetime(2022, 11, date + 1, 7),
+        worker_name
+        )
+    
+      if cell.value == friday_str.decode('utf-8'):
+        print(f"Cell {cell.coordinate} is a friday shift")
+        app.create_shift(
+        datetime.datetime(2022, 11, date, 7),
+        datetime.datetime(2022, 11, date, 16),
+        worker_name
+        )
 
 # Get all shifts for a worker
-worker_shifts = app.get_shifts_for_worker("John Doe")
+worker_shifts = app.get_shifts_for_worker(worker_name)
 print(worker_shifts)
 
 # Get the total hours worked for a shift
 shift = worker_shifts[0]
 hours = app.get_shift_hours(shift)
 print(hours)
-
-
-####
-#reading a colored cell in excel
-####
-
-
-# Load the Excel workbook
-workbook = load_workbook("file.xlsx")
-
-# Get the active sheet
-sheet = workbook.active
-
-# Scan the cells in the sheet
-for row in sheet.iter_rows():
-    for cell in row:
-        if cell.fill.start_color.index is not None:
-            # The cell is colored
-            print(f"Cell {cell.coordinate} is colored {cell.fill.start_color.index}")
